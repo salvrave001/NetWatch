@@ -43,7 +43,7 @@ class NetWatchApp(ctk.CTk):
         try:
             import ctypes
 
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("NetWatch.App.1.0")
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("NetWatch.App.1.0.1")
         except Exception:
             pass
 
@@ -100,7 +100,7 @@ class NetWatchApp(ctk.CTk):
 
         ctk.CTkLabel(
             left,
-            text="  v1.0",
+            text="  v1.0.1",
             font=FONTS["caption"],
             text_color=COLORS["accent"],
             anchor="w",
