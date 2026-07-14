@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import threading
-from tkinter import PhotoImage, ttk
+from tkinter import ttk
 
 import customtkinter as ctk
 import psutil
@@ -28,6 +28,7 @@ from process_checker.ui import (
     HudLabel,
     InfoDialog,
     PortChip,
+    apply_window_icon,
 )
 
 
@@ -38,10 +39,19 @@ class NetWatchApp(ctk.CTk):
         ctk.set_appearance_mode("dark")
         self.configure(fg_color=COLORS["bg"])
 
+        # Windows taskbar identity — use exe/app icon, not python/CTk default
+        try:
+            import ctypes
+
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("NetWatch.App.1.0")
+        except Exception:
+            pass
+
         self.title(t("app_title"))
         self.geometry("1100x720")
         self.minsize(900, 560)
-        self._set_window_icon()
+        apply_window_icon(self)
+        self.bind("<Map>", lambda _e: apply_window_icon(self, retries=False), add="+")
 
         self._rows: list[ConnectionRow] = []
         self._selected_index: int | None = None
@@ -54,22 +64,8 @@ class NetWatchApp(ctk.CTk):
         self._logo_image: ctk.CTkImage | None = None
 
         self._build_ui()
+        apply_window_icon(self)
         self.refresh()
-
-    def _set_window_icon(self) -> None:
-        ico = asset_path("netwatch.ico")
-        png = asset_path("logo_header.png")
-        try:
-            if ico.is_file():
-                self.iconbitmap(default=str(ico))
-        except Exception:
-            pass
-        try:
-            if png.is_file():
-                self._icon_photo = PhotoImage(file=str(png))
-                self.iconphoto(True, self._icon_photo)
-        except Exception:
-            pass
 
     def _build_ui(self) -> None:
         self._build_header()
