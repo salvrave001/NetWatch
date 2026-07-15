@@ -91,7 +91,7 @@ class NetWatchApp(ctk.CTk):
 
         ctk.CTkLabel(
             left,
-            text="  v1.0.2",
+            text="  v1.0.3",
             font=FONTS["caption"],
             text_color=COLORS["accent"],
             anchor="w",
