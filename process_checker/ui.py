@@ -12,124 +12,67 @@ from process_checker.paths import asset_path
 from process_checker.theme import COLORS, FONTS, SIZES
 
 _ICON_PHOTO: PhotoImage | None = None
-_ICON_ICO: str | None = None
-_WIN_HICONS: list[int] = []
 
 
-def _icon_paths() -> tuple[str | None, str | None]:
-    global _ICON_ICO
-    ico = asset_path("netwatch.ico")
-    png = asset_path("logo_header.png")
-    ico_s = str(ico) if ico.is_file() else None
-    png_s = str(png) if png.is_file() else None
-    if ico_s:
-        _ICON_ICO = ico_s
-    return ico_s, png_s
+def _ico_path() -> str | None:
+    path = asset_path("netwatch.ico")
+    return str(path) if path.is_file() else None
+
+
+def _png_path() -> str | None:
+    path = asset_path("logo_header.png")
+    return str(path) if path.is_file() else None
 
 
 def _get_icon_photo(master) -> PhotoImage | None:
     global _ICON_PHOTO
     if _ICON_PHOTO is not None:
         return _ICON_PHOTO
-    _, png = _icon_paths()
+    png = _png_path()
     if not png:
         return None
     try:
-        root = master.winfo_toplevel()
-        while True:
-            parent = getattr(root, "master", None)
-            if parent is None:
-                break
-            root = parent.winfo_toplevel() if hasattr(parent, "winfo_toplevel") else parent
-        _ICON_PHOTO = PhotoImage(master=root, file=png)
-        return _ICON_PHOTO
+        _ICON_PHOTO = PhotoImage(master=master.winfo_toplevel(), file=png)
     except Exception:
         try:
             _ICON_PHOTO = PhotoImage(file=png)
-            return _ICON_PHOTO
         except Exception:
             return None
+    return _ICON_PHOTO
 
 
-def _apply_win32_icon(window, ico_path: str) -> None:
-    """Set title-bar icon via Win32 WM_SETICON (bypasses CTk default)."""
-    try:
-        import ctypes
+def apply_window_icon(window) -> None:
+    """Apply NetWatch icon safely (no Win32 hacks — those crashed some builds)."""
+    if not getattr(window, "winfo_exists", lambda: False)():
+        return
 
-        user32 = ctypes.windll.user32
-        WM_SETICON = 0x0080
-        ICON_SMALL = 0
-        ICON_BIG = 1
-        IMAGE_ICON = 1
-        LR_LOADFROMFILE = 0x0010
-        LR_DEFAULTSIZE = 0x0040
-        GA_ROOT = 2
+    ico = _ico_path()
 
-        hwnd = int(window.winfo_id())
-        root_hwnd = user32.GetAncestor(hwnd, GA_ROOT) or hwnd
-
-        for size, which in ((16, ICON_SMALL), (32, ICON_BIG)):
-            hicon = user32.LoadImageW(
-                None,
-                ico_path,
-                IMAGE_ICON,
-                size,
-                size,
-                LR_LOADFROMFILE,
-            )
-            if hicon:
-                _WIN_HICONS.append(hicon)
-                user32.SendMessageW(root_hwnd, WM_SETICON, which, hicon)
-                user32.SendMessageW(hwnd, WM_SETICON, which, hicon)
-    except Exception:
-        pass
-
-
-def apply_window_icon(window, *, retries: bool = True) -> None:
-    """Force NetWatch icon on any Tk/CTk window (kills default blue CTk icon)."""
-    ico, _ = _icon_paths()
-
-    def _apply(_event=None) -> None:
+    def _apply() -> None:
         try:
-            if ico:
-                try:
-                    window.iconbitmap(default=ico)
-                except Exception:
-                    pass
-                try:
-                    window.iconbitmap(ico)
-                except Exception:
-                    pass
-                try:
-                    window.wm_iconbitmap(ico)
-                except Exception:
-                    pass
-                try:
-                    if window.winfo_exists():
-                        _apply_win32_icon(window, ico)
-                except Exception:
-                    pass
+            if not window.winfo_exists():
+                return
         except Exception:
-            pass
+            return
+        if ico:
+            try:
+                window.iconbitmap(ico)
+            except Exception:
+                pass
         try:
             photo = _get_icon_photo(window)
             if photo is not None:
                 window._netwatch_icon_photo = photo
                 window.iconphoto(False, photo)
-                window.iconphoto(True, photo)
         except Exception:
             pass
 
     _apply()
-    if retries:
-        try:
-            window.after_idle(_apply)
-            window.after(20, _apply)
-            window.after(100, _apply)
-            window.after(300, _apply)
-            window.bind("<Map>", _apply, add="+")
-        except Exception:
-            pass
+    try:
+        window.after(50, _apply)
+        window.after(250, _apply)
+    except Exception:
+        pass
 
 
 class HudFrame(ctk.CTkFrame):

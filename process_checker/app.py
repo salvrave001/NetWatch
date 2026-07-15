@@ -39,19 +39,10 @@ class NetWatchApp(ctk.CTk):
         ctk.set_appearance_mode("dark")
         self.configure(fg_color=COLORS["bg"])
 
-        # Windows taskbar identity — use exe/app icon, not python/CTk default
-        try:
-            import ctypes
-
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("NetWatch.App.1.0.1")
-        except Exception:
-            pass
-
         self.title(t("app_title"))
         self.geometry("1100x720")
         self.minsize(900, 560)
         apply_window_icon(self)
-        self.bind("<Map>", lambda _e: apply_window_icon(self, retries=False), add="+")
 
         self._rows: list[ConnectionRow] = []
         self._selected_index: int | None = None
@@ -100,7 +91,7 @@ class NetWatchApp(ctk.CTk):
 
         ctk.CTkLabel(
             left,
-            text="  v1.0.1",
+            text="  v1.0.2",
             font=FONTS["caption"],
             text_color=COLORS["accent"],
             anchor="w",

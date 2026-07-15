@@ -41,6 +41,15 @@ Output: `dist\NetWatch.exe`
 - Python 3.10+ (for source / build)
 - Admin rights recommended for full process access
 
+## Download / SmartScreen
+
+Browsers and Windows may show **"rarely downloaded"** / SmartScreen warnings for `NetWatch.exe`.
+This is normal for a small open-source app without a paid code-signing certificate.
+
+- Prefer downloading from the official GitHub Releases page only
+- If Windows blocks: **More info → Run anyway**
+- Or run from source: `python main.py`
+
 ## License
 
 MIT
